@@ -1,0 +1,273 @@
+#include "thingProperties.h"
+#include <Arduino_MKRIoTCarrier.h>
+
+//FILE FOR IMAGES (ADD AS FILE .h)
+#include "sun.c"  
+#include "cloud.c"
+#include "thunderstorm.c"
+#include "rain.c"
+
+#define BLYNK_PRINT Serial
+#include <SPI.h>
+#include <WiFiNINA.h>
+#include <BlynkSimpleWiFiNINA.h>
+
+char auth[] = "Auth code of Blynk";
+	
+int pir = A5;
+int pirState = 0;
+int allarme = 0;
+
+MKRIoTCarrier carrier;
+ 
+unsigned long myTime;
+
+uint32_t colorGreen = carrier.leds.Color(255, 0, 0);
+uint32_t colorRed = carrier.leds.Color( 0, 255, 0);
+uint32_t noColor = carrier.leds.Color( 0, 0, 0);
+
+
+char ssid[] = "SSID of your WiFi";
+char pass[] = "Password of your WiFi";
+
+String messaggio[10] = {};
+
+int CONTATORE_messaggio = 0;
+int CONTATORE_messaggio2 = 0;
+
+
+void setup() {
+  // Initialize serial and wait for port to open:
+  Serial.begin(9600);
+  while (!Serial);
+  
+  Blynk.begin(auth, ssid, pass);
+ 
+  // Defined in thingProperties.h
+  initProperties();
+ 
+  // Connect to Arduino IoT Cloud
+  ArduinoCloud.begin(ArduinoIoTPreferredConnection);
+  //Get Cloud Info/errors , 0 (only errors) up to 4
+  setDebugMessageLevel(2);
+  ArduinoCloud.printDebugInfo();
+ 
+  //Wait to get cloud connection to init the carrier
+  while (ArduinoCloud.connected() != 1) {
+    ArduinoCloud.update();
+    delay(500);
+  }
+  delay(500);
+  CARRIER_CASE = false;
+  carrier.begin();
+  carrier.display.setRotation(0);
+  delay(1500);
+  pinMode(pir, INPUT);
+  
+  
+  myTime = millis();
+}
+ 
+void loop() {
+  Blynk.run();
+  ArduinoCloud.update();
+  carrier.Buttons.update();
+  
+  
+  while(!carrier.Light.colorAvailable()) {
+    delay(5);
+  }
+  int none;
+  carrier.Light.readColor(none, none, none, light);
+  
+  pirState = digitalRead(pir);
+  //Serial.print("PIR State: ");
+  //Serial.println(pirState);
+  
+  //if(digitalRead(3) == HIGH)  Serial.print("ok"); //prova blynk
+ 
+  if(pirState == 1 && allarme == 1) { //Allarme con intruso
+    Blynk.notify("Intruso");
+    suona();
+  }
+  else if(allarme == 1){  //Allarme senza intruso
+    noSuona();
+  }
+  else if(allarme == 0 && pirState == 1) {  //Intruso senza allarma
+    nada();
+  }
+  
+  if (carrier.Buttons.onTouchDown(TOUCH0)) {
+    myTime = millis();
+    button0_Weather();
+  }
+  
+  if (carrier.Buttons.onTouchDown(TOUCH1)) {
+    myTime = millis();
+    button1_Alarm();
+  }
+  
+  if (carrier.Buttons.onTouchDown(TOUCH2)) {
+    myTime = millis();
+    button2();
+  }
+  
+  if (carrier.Buttons.onTouchDown(TOUCH3)) {
+    //Serial.println(CONTATORE_messaggio);
+    myTime = millis();
+    
+    button3_Agenda();
+    
+    if(messaggio[CONTATORE_messaggio2 +1] != "" && CONTATORE_messaggio2 <= 9) CONTATORE_messaggio2++;
+    else  CONTATORE_messaggio2 = 0;
+    /*
+    if(messaggio[CONTATORE_messaggio] == NULL) CONTATORE_messaggio2 = CONTATORE_messaggio2;
+    if(CONTATORE_messaggio2 == 9)  CONTATORE_messaggio2 = 0;
+    else CONTATORE_messaggio2++;*/
+  }
+  /*
+  if (carrier.Buttons.onTouchDown(TOUCH4)) {
+    myTime = millis();
+    button4_Messagge();
+  }*/
+  
+  if(millis() - myTime > 5000){
+      carrier.display.fillScreen(ST77XX_BLACK);
+      myTime = millis();
+  }
+  
+  
+    
+}
+
+//Legge da Blynk
+BLYNK_WRITE(V0){
+  String textIn = param.asStr();
+  messaggio [CONTATORE_messaggio] = textIn;
+  for (int x = 0; x < 10; x++)  Serial.println(messaggio[x]);
+  
+  if(CONTATORE_messaggio == 9)  CONTATORE_messaggio = 0;
+  else CONTATORE_messaggio++;
+  
+  carrier.leds.fill(colorGreen, 0, 5);
+  carrier.leds.show();
+  carrier.Buzzer.sound(200);
+  delay(1000);
+  carrier.Buzzer.noSound();
+  carrier.leds.fill(noColor, 0, 5);
+  carrier.leds.show();
+}  
+
+void button0_Weather(){
+    temperature = carrier.Env.readTemperature();
+    humidity = carrier.Env.readHumidity();
+    pressure = carrier.Pressure.readPressure();
+    carrier.display.fillScreen(ST77XX_BLACK);
+    carrier.display.setTextColor(ST77XX_WHITE);
+    carrier.display.setTextSize(2);
+    carrier.display.setCursor(30, 90); //colonna, riga
+    carrier.display.print("Temp: ");
+    carrier.display.print(temperature);
+    carrier.display.print(" C");
+    carrier.display.setCursor(30, 110);
+    carrier.display.print("Humi: ");
+    carrier.display.print(humidity);
+    carrier.display.print(" %");
+    carrier.display.setCursor(30, 130);
+    carrier.display.print("Light: ");
+    carrier.display.print(light);
+    carrier.display.setCursor(30, 150);
+    carrier.display.print("Pressure: ");
+    carrier.display.print(pressure);
+    
+    if (humidity >= 60 && temperature >= 15){ //rain
+      carrier.display.drawBitmap(100, 30, gImage_rain, 50, 50, ST77XX_BLUE);
+    }
+    
+    else if (temperature >= 15 && light >= 700) { //sunny
+      carrier.display.drawBitmap(100, 30, gImage_sun, 50, 50, ST77XX_YELLOW);
+    }
+    
+    else if (temperature <= 16 && light >= 700) { //cold and sunny
+      carrier.display.drawBitmap(100, 30, gImage_sun, 50, 50, ST77XX_YELLOW);
+    }
+    
+    else if (temperature >= 15 && light <= 700 && light >= 350) { //cloudy
+      carrier.display.drawBitmap(100, 30, gImage_cloud, 50, 50, ST77XX_CYAN);
+    }
+    
+    else if (temperature >= 15 && light <= 350) { //thunderstorm
+      carrier.display.drawBitmap(100, 30, gImage_thunderstorm, 50, 50, ST77XX_WHITE);
+    }
+}
+
+void button1_Alarm(){
+  carrier.display.fillScreen(ST77XX_BLACK);
+  carrier.display.setTextColor(ST77XX_WHITE);
+  carrier.display.setTextSize(2);
+  carrier.display.setCursor(10, 90); //colonna, riga
+  
+  if(allarme == 0)  carrier.display.print("ALLARME DISATTIVATO");
+  else if(allarme == 1) carrier.display.print("ALLARME ATTIVATO");
+  
+  carrier.display.setTextSize(1.5);
+  carrier.display.setCursor(10, 110); //colonna, riga
+  carrier.display.print("Premi 2 per attivare");
+  carrier.display.setCursor(10, 130);
+  carrier.display.print("o disattivare l'allarme");
+  
+  
+  
+}
+
+void button2(){
+  allarme = !allarme;
+  button1_Alarm();
+}
+
+
+void button3_Agenda(){
+  carrier.display.fillScreen(ST77XX_BLACK);
+  carrier.display.setTextColor(ST77XX_WHITE);
+  carrier.display.setTextSize(2);
+  carrier.display.setCursor(10, 90); //colonna, riga
+
+  carrier.display.print(messaggio[CONTATORE_messaggio2]);
+}
+
+/*
+void button4_Message(){
+  
+}
+*/
+
+void suona(){
+  carrier.leds.fill(colorRed, 0, 5);
+  carrier.leds.show();
+  
+  delay(3000);
+  carrier.Buzzer.sound(200);
+  carrier.leds.fill(colorRed, 0, 5);
+  carrier.leds.show();
+
+  delay(5000);
+  
+  carrier.Buzzer.noSound();
+  carrier.leds.fill(noColor, 0, 5);
+  carrier.leds.show();
+  noSuona();
+}
+
+void noSuona(){
+  carrier.leds.fill(noColor, 0, 5);
+  carrier.leds.show();
+}
+
+void nada(){
+  carrier.display.fillScreen(ST77XX_BLACK);
+  carrier.display.setTextColor(ST77XX_WHITE);
+  carrier.display.setTextSize(2);
+  carrier.display.setCursor(10, 100); //colonna, riga
+  carrier.display.print("Ciao Greta :)");
+  delay(2000);
+}
