@@ -1,5 +1,5 @@
 # Arduino-Opla-Kit-Project
-This is the code of my last Youtube video. Please check it for more information https://youtu.be/ERMxU6fnjtQ
+This is the code of my last Youtube video. Please check it for more information on the channel "Greta Galli"
 
 You must run this code on the Arduino IoT Cloud
 https://store.arduino.cc/digital/create?utm_source=influencer&utm_medium=cpc&utm_campaign=summer_sales_2021&utm_content=gregalli02
