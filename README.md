@@ -6,10 +6,10 @@ https://store.arduino.cc/digital/create?utm_source=influencer&utm_medium=cpc&utm
 
 First of all create a new project and add this variable:
 
--humidity    - float - read only - periodically (1 sec)
--light       - int   - read only - periodically (1 sec)
--pressure    - float - read only - periodically (1 sec)
--temperature - float - read only - periodically (1 sec)
+/nhumidity    - float - read only - periodically (1 sec)
+/nlight       - int   - read only - periodically (1 sec)
+/npressure    - float - read only - periodically (1 sec)
+/ntemperature - float - read only - periodically (1 sec)
 
 After this connect your device, I've used an Arduino MKR WiFi 1010
 And then connect it to your network
