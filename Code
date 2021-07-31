@@ -1,7 +1,7 @@
 #include "thingProperties.h"
 #include <Arduino_MKRIoTCarrier.h>
 
-//FILE FOR IMAGES (ADD AS FILE .h)
+//FILE FOR IMAGES (ADD AS FILE .c)
 #include "sun.c"  
 #include "cloud.c"
 #include "thunderstorm.c"
@@ -93,7 +93,7 @@ void loop() {
   else if(allarme == 1){  //Allarme senza intruso
     noSuona();
   }
-  else if(allarme == 0 && pirState == 1) {  //Intruso senza allarma
+  else if(allarme == 0 && pirState == 1) {  //Intruso senza allarme
     nada();
   }
   
