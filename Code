@@ -13,27 +13,34 @@
 #include <BlynkSimpleWiFiNINA.h>
 
 char auth[] = "Auth code of Blynk";
-	
+char welcomeMessage[] = "Hi Greta :)";
+
 int pir = A5;
 int pirState = 0;
-int allarme = 0;
+bool alarmEnabled = false;
 
 MKRIoTCarrier carrier;
  
 unsigned long myTime;
 
-uint32_t colorGreen = carrier.leds.Color(255, 0, 0);
-uint32_t colorRed = carrier.leds.Color( 0, 255, 0);
-uint32_t noColor = carrier.leds.Color( 0, 0, 0);
+uint32_t colorGreen = carrier.leds.Color( 255, 0, 0);
+uint32_t colorRed   = carrier.leds.Color( 0, 255, 0);
+uint32_t noColor    = carrier.leds.Color( 0,   0, 0);
 
 
 char ssid[] = "SSID of your WiFi";
 char pass[] = "Password of your WiFi";
 
-String messaggio[10] = {};
-
-int CONTATORE_messaggio = 0;
-int CONTATORE_messaggio2 = 0;
+/*  Agenda section
+    The agenda is a list of messages which the user can see (one per time).
+    It is implemented as circular list.
+        - agendaMessages is the list of messages
+        - nextFreeMessageIndex is the current position in which store a new message
+        - currentMessageIndex  is the index of the current message showed to the user.
+*/
+String agendaMessages[10] = {};
+int nextFreeMessageIndex  = 0;
+int currentMessageIndex   = 0;
 
 
 void setup() {
@@ -48,7 +55,7 @@ void setup() {
  
   // Connect to Arduino IoT Cloud
   ArduinoCloud.begin(ArduinoIoTPreferredConnection);
-  //Get Cloud Info/errors , 0 (only errors) up to 4
+  // Get Cloud Info/errors , 0 (only errors) up to 4
   setDebugMessageLevel(2);
   ArduinoCloud.printDebugInfo();
  
@@ -63,7 +70,6 @@ void setup() {
   carrier.display.setRotation(0);
   delay(1500);
   pinMode(pir, INPUT);
-  
   
   myTime = millis();
 }
@@ -84,16 +90,16 @@ void loop() {
   //Serial.print("PIR State: ");
   //Serial.println(pirState);
   
-  //if(digitalRead(3) == HIGH)  Serial.print("ok"); //prova blynk
+  //if (digitalRead(3) == HIGH)  Serial.print("ok"); //prova blynk
  
-  if(pirState == 1 && allarme == 1) { //Allarme con intruso
+  if(pirState == 1 && alarmEnabled) { //Allarme con intruso
     Blynk.notify("Intruso");
     suona();
   }
-  else if(allarme == 1){  //Allarme senza intruso
+  else if(alarmEnabled){  // Allarm without intruder
     noSuona();
   }
-  else if(allarme == 0 && pirState == 1) {  //Intruso senza allarme
+  else if(!alarmEnabled && pirState == 1) {  //Intruder and alarm disabled
     nada();
   }
   
@@ -113,17 +119,17 @@ void loop() {
   }
   
   if (carrier.Buttons.onTouchDown(TOUCH3)) {
-    //Serial.println(CONTATORE_messaggio);
+    //Serial.println(nextFreeMessageIndex);
     myTime = millis();
     
     button3_Agenda();
     
-    if(messaggio[CONTATORE_messaggio2 +1] != "" && CONTATORE_messaggio2 <= 9) CONTATORE_messaggio2++;
-    else  CONTATORE_messaggio2 = 0;
+    if(messaggio[currentMessageIndex +1] != "" && nextFreeMessageIndex2 <= 9) currentMessageIndex++;
+    else  currentMessageIndex = 0;
     /*
-    if(messaggio[CONTATORE_messaggio] == NULL) CONTATORE_messaggio2 = CONTATORE_messaggio2;
-    if(CONTATORE_messaggio2 == 9)  CONTATORE_messaggio2 = 0;
-    else CONTATORE_messaggio2++;*/
+    if(messaggio[nextFreeMessageIndex] == NULL) currentMessageIndex = currentMessageIndex;
+    if(currentMessageIndex == 9)  nextFreeMessageIndex2 = 0;
+    else currentMessageIndex++;*/
   }
   /*
   if (carrier.Buttons.onTouchDown(TOUCH4)) {
@@ -142,12 +148,14 @@ void loop() {
 
 //Legge da Blynk
 BLYNK_WRITE(V0){
+  // read the message and add it to the list
   String textIn = param.asStr();
-  messaggio [CONTATORE_messaggio] = textIn;
-  for (int x = 0; x < 10; x++)  Serial.println(messaggio[x]);
-  
-  if(CONTATORE_messaggio == 9)  CONTATORE_messaggio = 0;
-  else CONTATORE_messaggio++;
+  agendaMessages[nextFreeMessageIndex] = textIn;
+  for (int x = 0; x < 10; x++)  Serial.println(agendaMessages[x]);
+ 
+  // if reach the max number of messages then wrap around 
+  if(nextFreeMessageIndex == 9)  nextFreeMessageIndex = 0;
+  else nextFreeMessageIndex++;
   
   carrier.leds.fill(colorGreen, 0, 5);
   carrier.leds.show();
@@ -207,8 +215,8 @@ void button1_Alarm(){
   carrier.display.setTextSize(2);
   carrier.display.setCursor(10, 90); //colonna, riga
   
-  if(allarme == 0)  carrier.display.print("ALLARME DISATTIVATO");
-  else if(allarme == 1) carrier.display.print("ALLARME ATTIVATO");
+  if(!alarmEnabled)  carrier.display.print("ALLARME DISATTIVATO");
+  else if(alarmEnabled) carrier.display.print("ALLARME ATTIVATO");
   
   carrier.display.setTextSize(1.5);
   carrier.display.setCursor(10, 110); //colonna, riga
@@ -218,7 +226,7 @@ void button1_Alarm(){
 }
 
 void button2(){
-  allarme = !allarme;
+  alarmEnabled = !alarmEnabled;
   button1_Alarm();
 }
 
@@ -229,7 +237,7 @@ void button3_Agenda(){
   carrier.display.setTextSize(2);
   carrier.display.setCursor(10, 90); //colonna, riga
 
-  carrier.display.print(messaggio[CONTATORE_messaggio2]);
+  carrier.display.print( agendaMessages[currentMessageIndex] );
 }
 
 /*
@@ -264,7 +272,7 @@ void nada(){
   carrier.display.fillScreen(ST77XX_BLACK);
   carrier.display.setTextColor(ST77XX_WHITE);
   carrier.display.setTextSize(2);
-  carrier.display.setCursor(10, 100); //colonna, riga
-  carrier.display.print("Ciao Greta :)");
+  carrier.display.setCursor(10, 100); // column, row
+  carrier.display.print(welcome_message);
   delay(2000);
 }
