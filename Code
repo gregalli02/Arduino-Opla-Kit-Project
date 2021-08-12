@@ -82,11 +82,14 @@ void loop() {
   carrier.Light.readColor(none, none, none, light);
   
   pirState = digitalRead(pir);
-  //Serial.print("PIR State: ");
-  //Serial.println(pirState);
+  if (serialEnabled) {
+    Serial.print("PIR State: ");
+    Serial.println(pirState);
+    if (digitalRead(3) == HIGH)
+       Serial.print("ok");
+  }
   
-  //if (digitalRead(3) == HIGH)  Serial.print("ok"); //prova blynk
- 
+  
   if(pirState == 1 && alarmEnabled) { //Allarme con intruso
     Blynk.notify(intruderMsg);
     suona();
@@ -114,17 +117,14 @@ void loop() {
   }
   
   if (carrier.Buttons.onTouchDown(TOUCH3)) {
-    //Serial.println(nextFreeMessageIndex);
+    if (serialEnabled)
+       Serial.println(nextFreeMessageIndex);
     myTime = millis();
     
     button3_Agenda();
     
     if(messaggio[currentMessageIndex +1] != "" && nextFreeMessageIndex2 <= 9) currentMessageIndex++;
     else  currentMessageIndex = 0;
-    /*
-    if(messaggio[nextFreeMessageIndex] == NULL) currentMessageIndex = currentMessageIndex;
-    if(currentMessageIndex == 9)  nextFreeMessageIndex2 = 0;
-    else currentMessageIndex++;*/
   }
   /*
   if (carrier.Buttons.onTouchDown(TOUCH4)) {
@@ -146,8 +146,11 @@ BLYNK_WRITE(V0){
   // read the message and add it to the list
   String textIn = param.asStr();
   agendaMessages[nextFreeMessageIndex] = textIn;
-  for (int x = 0; x < 10; x++)  Serial.println(agendaMessages[x]);
- 
+  if (serialEnabled) {
+      for (int x = 0; x < 10; x++)
+          Serial.println(agendaMessages[x]);
+  }
+
   // if reach the max number of messages then wrap around 
   if(nextFreeMessageIndex == 9)  nextFreeMessageIndex = 0;
   else nextFreeMessageIndex++;
