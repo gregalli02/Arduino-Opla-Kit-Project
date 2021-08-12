@@ -13,4 +13,7 @@ char alarmEnabledMsg[]  = "Alarm Enabled";
 char alarmDisabledMsg[] = "Alarm Disabled";
 char alarmActionMsg1[]  = "Press 2 to enable";
 char alarmActionMsg2[]  = "or disable alarm";
-
+char tempMsg[]          = "Temp: ";
+char humMsg[]           = "Hum: ";
+char lightMsg[]         = "Light: ";
+char pressureMsg[]      = "Pressure: ";         

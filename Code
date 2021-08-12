@@ -172,18 +172,18 @@ void button0_Weather(){
     carrier.display.setTextColor(ST77XX_WHITE);
     carrier.display.setTextSize(2);
     carrier.display.setCursor(30, 90); //column, row
-    carrier.display.print("Temp: ");
+    carrier.display.print(tempMsg);
     carrier.display.print(temperature);
     carrier.display.print(" C");
     carrier.display.setCursor(30, 110);
-    carrier.display.print("Humi: ");
+    carrier.display.print(humMsg);
     carrier.display.print(humidity);
     carrier.display.print(" %");
     carrier.display.setCursor(30, 130);
-    carrier.display.print("Light: ");
+    carrier.display.print(lightMsg);
     carrier.display.print(light);
     carrier.display.setCursor(30, 150);
-    carrier.display.print("Pressure: ");
+    carrier.display.print(pressureMsg);
     carrier.display.print(pressure);
     
     if (humidity >= 60 && temperature >= 15){ //rain
