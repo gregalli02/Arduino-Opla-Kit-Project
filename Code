@@ -1,7 +1,7 @@
 #include "thingProperties.h"
 #include <Arduino_MKRIoTCarrier.h>
 
-//FILE FOR IMAGES (ADD AS FILE .c)
+// FILE FOR IMAGES (ADD AS FILE .c)
 #include "sun.c"  
 #include "cloud.c"
 #include "thunderstorm.c"
@@ -52,7 +52,7 @@ void setup() {
   setDebugMessageLevel(2);
   ArduinoCloud.printDebugInfo();
  
-  //Wait to get cloud connection to init the carrier
+  // Wait to get cloud connection to init the carrier
   while (ArduinoCloud.connected() != 1) {
     ArduinoCloud.update();
     delay(500);
@@ -215,9 +215,6 @@ void button1_Alarm(){
   carrier.display.print("Premi 2 per attivare");
   carrier.display.setCursor(10, 130);
   carrier.display.print("o disattivare l'allarme");
-  
-  
-  
 }
 
 void button2(){
