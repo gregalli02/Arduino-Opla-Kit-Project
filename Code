@@ -13,8 +13,8 @@
 #include <WiFiNINA.h>
 #include <BlynkSimpleWiFiNINA.h>
 
-int pir = A5;
-int pirState = 0;
+int pir           = A5;
+int pirState      = 0;
 bool alarmEnabled = false;
 
 MKRIoTCarrier carrier;
@@ -24,7 +24,6 @@ unsigned long myTime;
 uint32_t colorGreen = carrier.leds.Color( 255, 0, 0);
 uint32_t colorRed   = carrier.leds.Color( 0, 255, 0);
 uint32_t noColor    = carrier.leds.Color( 0,   0, 0);
-
 
 /*  Agenda section
     The agenda is a list of messages which the user can see (one per time).
@@ -90,11 +89,11 @@ void loop() {
   }
   
   
-  if(pirState == 1 && alarmEnabled) { //Allarme con intruso
+  if (pirState == 1 && alarmEnabled) { //Allarme con intruso
     Blynk.notify(intruderMsg);
     suona();
   }
-  else if(alarmEnabled){  // Allarm without intruder
+  else if (alarmEnabled){  // Allarm without intruder
     noSuona();
   }
   else if(!alarmEnabled && pirState == 1) {  //Intruder and alarm disabled
@@ -132,12 +131,10 @@ void loop() {
     button4_Messagge();
   }*/
   
-  if(millis() - myTime > 5000){
+  if (millis() - myTime > 5000){
       carrier.display.fillScreen(ST77XX_BLACK);
       myTime = millis();
   }
-  
-  
     
 }
 
@@ -152,7 +149,7 @@ BLYNK_WRITE(V0){
   }
 
   // if reach the max number of messages then wrap around 
-  if(nextFreeMessageIndex == 9)  nextFreeMessageIndex = 0;
+  if (nextFreeMessageIndex == 9)  nextFreeMessageIndex = 0;
   else nextFreeMessageIndex++;
   
   carrier.leds.fill(colorGreen, 0, 5);
@@ -166,8 +163,8 @@ BLYNK_WRITE(V0){
 
 void button0_Weather(){
     temperature = carrier.Env.readTemperature();
-    humidity = carrier.Env.readHumidity();
-    pressure = carrier.Pressure.readPressure();
+    humidity    = carrier.Env.readHumidity();
+    pressure    = carrier.Pressure.readPressure();
     carrier.display.fillScreen(ST77XX_BLACK);
     carrier.display.setTextColor(ST77XX_WHITE);
     carrier.display.setTextSize(2);
@@ -213,8 +210,10 @@ void button1_Alarm(){
   carrier.display.setTextSize(2);
   carrier.display.setCursor(10, 90); //column, row
   
-  if(!alarmEnabled)  carrier.display.print(alarmDisabledMsg);
-  else if(alarmEnabled) carrier.display.print(alarmEnabledMsg);
+  if (!alarmEnabled)
+    carrier.display.print(alarmDisabledMsg);
+  else
+    carrier.display.print(alarmEnabledMsg);
   
   carrier.display.setTextSize(1.5);
   carrier.display.setCursor(10, 110); // column, row
