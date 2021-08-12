@@ -6,14 +6,12 @@
 #include "cloud.c"
 #include "thunderstorm.c"
 #include "rain.c"
+#include "congif.c"
 
 #define BLYNK_PRINT Serial
 #include <SPI.h>
 #include <WiFiNINA.h>
 #include <BlynkSimpleWiFiNINA.h>
-
-char auth[] = "Auth code of Blynk";
-char welcomeMessage[] = "Hi Greta :)";
 
 int pir = A5;
 int pirState = 0;
@@ -27,9 +25,6 @@ uint32_t colorGreen = carrier.leds.Color( 255, 0, 0);
 uint32_t colorRed   = carrier.leds.Color( 0, 255, 0);
 uint32_t noColor    = carrier.leds.Color( 0,   0, 0);
 
-
-char ssid[] = "SSID of your WiFi";
-char pass[] = "Password of your WiFi";
 
 /*  Agenda section
     The agenda is a list of messages which the user can see (one per time).
@@ -93,7 +88,7 @@ void loop() {
   //if (digitalRead(3) == HIGH)  Serial.print("ok"); //prova blynk
  
   if(pirState == 1 && alarmEnabled) { //Allarme con intruso
-    Blynk.notify("Intruso");
+    Blynk.notify(intruderMsg);
     suona();
   }
   else if(alarmEnabled){  // Allarm without intruder
@@ -173,7 +168,7 @@ void button0_Weather(){
     carrier.display.fillScreen(ST77XX_BLACK);
     carrier.display.setTextColor(ST77XX_WHITE);
     carrier.display.setTextSize(2);
-    carrier.display.setCursor(30, 90); //colonna, riga
+    carrier.display.setCursor(30, 90); //column, row
     carrier.display.print("Temp: ");
     carrier.display.print(temperature);
     carrier.display.print(" C");
@@ -213,16 +208,16 @@ void button1_Alarm(){
   carrier.display.fillScreen(ST77XX_BLACK);
   carrier.display.setTextColor(ST77XX_WHITE);
   carrier.display.setTextSize(2);
-  carrier.display.setCursor(10, 90); //colonna, riga
+  carrier.display.setCursor(10, 90); //column, row
   
-  if(!alarmEnabled)  carrier.display.print("ALLARME DISATTIVATO");
-  else if(alarmEnabled) carrier.display.print("ALLARME ATTIVATO");
+  if(!alarmEnabled)  carrier.display.print(alarmDisabledMsg);
+  else if(alarmEnabled) carrier.display.print(alarmEnabledMsg);
   
   carrier.display.setTextSize(1.5);
-  carrier.display.setCursor(10, 110); //colonna, riga
-  carrier.display.print("Premi 2 per attivare");
+  carrier.display.setCursor(10, 110); // column, row
+  carrier.display.print(alarmActionMsg1);
   carrier.display.setCursor(10, 130);
-  carrier.display.print("o disattivare l'allarme");
+  carrier.display.print(alarmActionMsg2);
 }
 
 void button2(){
@@ -235,7 +230,7 @@ void button3_Agenda(){
   carrier.display.fillScreen(ST77XX_BLACK);
   carrier.display.setTextColor(ST77XX_WHITE);
   carrier.display.setTextSize(2);
-  carrier.display.setCursor(10, 90); //colonna, riga
+  carrier.display.setCursor(10, 90); // column, row
 
   carrier.display.print( agendaMessages[currentMessageIndex] );
 }
